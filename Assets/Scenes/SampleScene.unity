@@ -592,7 +592,6 @@ GameObject:
   - component: {fileID: 1904406797}
   - component: {fileID: 1904406804}
   - component: {fileID: 1904406803}
-  - component: {fileID: 1904406802}
   - component: {fileID: 1904406801}
   - component: {fileID: 1904406800}
   m_Layer: 0
@@ -707,6 +706,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4d0191ee280bac4ba6a70871c9e05bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AgenteBuscador
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
+  objetivo: {fileID: 1103266784}
+  velocidad: 50
 --- !u!114 &1904406801
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -722,22 +727,6 @@ MonoBehaviour:
   DecisionPeriod: 5
   DecisionStep: 0
   TakeActionsBetweenDecisions: 1
---- !u!114 &1904406802
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1904406795}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.Agent
-  agentParameters:
-    maxStep: 0
-  hasUpgradedFromAgentParameters: 1
-  MaxStep: 0
 --- !u!114 &1904406803
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -751,19 +740,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.ML-Agents::Unity.MLAgents.Policies.BehaviorParameters
   m_BrainParameters:
-    VectorObservationSize: 1
+    VectorObservationSize: 9
     NumStackedVectorObservations: 1
     m_ActionSpec:
-      m_NumContinuousActions: 0
-      BranchSizes: 01000000
-    VectorActionSize: 01000000
+      m_NumContinuousActions: 2
+      BranchSizes: 
+    VectorActionSize: 02000000
     VectorActionDescriptions: []
-    VectorActionSpaceType: 0
+    VectorActionSpaceType: 1
     hasUpgradedBrainParametersWithActionSpec: 1
   m_Model: {fileID: 0}
   m_InferenceDevice: 0
-  m_BehaviorType: 0
-  m_BehaviorName: My Behavior
+  m_BehaviorType: 1
+  m_BehaviorName: Buscador
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1
@@ -778,7 +767,7 @@ Rigidbody:
   m_GameObject: {fileID: 1904406795}
   serializedVersion: 5
   m_Mass: 1
-  m_LinearDamping: 0
+  m_LinearDamping: 2
   m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
@@ -794,7 +783,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!1 &2029447475
 GameObject:
