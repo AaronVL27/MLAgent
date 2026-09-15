@@ -41,6 +41,8 @@ public class AgenteBuscador : Agent
         Vector3 fuerza = new Vector3(movimientoX, 0, movimientoY);
         rb.AddForce(fuerza * velocidad);
 
+        AddReward(0.0001f);
+
         float distanciaObjetivo = Vector3.Distance(transform.localPosition, objetivo.transform.localPosition);
 
         if (distanciaObjetivo < 1.5f)
