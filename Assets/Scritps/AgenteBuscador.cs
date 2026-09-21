@@ -9,8 +9,6 @@ public class AgenteBuscador : Agent
     [SerializeField] float velocidad;
     Rigidbody rb;
 
-
-
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody>();
