@@ -7,9 +7,10 @@ using UnityEngine.InputSystem;
 public class AgenteLaLleva : Agent
 {
     [SerializeField] GameObject oponente;
+    //[SerializeField] GameObject hojaLaLleva;
     [SerializeField] float velocidad;
-     Rigidbody rb;
-    bool lalleva;
+    Rigidbody rb;
+    [SerializeField] bool lalleva;
     public bool Lalleva { get => lalleva; set => lalleva = value; }
 
     public override void Initialize()
@@ -77,8 +78,8 @@ public class AgenteLaLleva : Agent
         {
             accionesConinuas[1] = -1.0f;
         }
-
     }
+
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Agente") && !lalleva)
