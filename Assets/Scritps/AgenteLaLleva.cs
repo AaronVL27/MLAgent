@@ -1,6 +1,7 @@
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -15,6 +16,8 @@ public class AgenteLaLleva : Agent
     [SerializeField] bool lalleva;
     public bool Lalleva { get => lalleva; set => lalleva = value; }
 
+    float distanciaAnterior;
+
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody>();
@@ -27,6 +30,8 @@ public class AgenteLaLleva : Agent
 
         transform.localPosition = new Vector3(Random.Range(-4, 4), 0.5f, Random.Range(-4, 4));
         oponente.transform.localPosition = new Vector3(Random.Range(-4, 4), 0.5f, Random.Range(-4, 4));
+
+        distanciaAnterior = Vector3.Distance(transform.localPosition, oponente.transform.localPosition);
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -49,28 +54,20 @@ public class AgenteLaLleva : Agent
         rb.AddForce(fuerza * velocidad);
 
         float distanciaObjetivo = Vector3.Distance(transform.localPosition, oponente.transform.localPosition);
+        float deltaDistancia = distanciaObjetivo - distanciaAnterior;
 
-        if (Lalleva && distanciaObjetivo > 1.5f)
+        if (lalleva)
         {
-            AddReward(0.002f);
+            // se alejó → recompensa; se acercó → castigo
+            AddReward(deltaDistancia * 0.05f);
         }
-        else if (Lalleva && distanciaObjetivo <= 1.5f) 
+        else
         {
-            AddReward(-0.001f);
+            // se acercó → recompensa; se alejó → castigo
+            AddReward(-deltaDistancia * 0.05f);
         }
-        if (!Lalleva && distanciaObjetivo < 1.5f)
-        {
-            AddReward(0.002f);
-        }
-        else if (!Lalleva && distanciaObjetivo > 1.5f)
-        {
-            AddReward(-0.001f);
-        }
-        if (transform.position.y < 0)
-        {
-            AddReward(-1.0f);
-            EndEpisode();
-        }
+
+        distanciaAnterior = distanciaObjetivo;
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -106,13 +103,20 @@ public class AgenteLaLleva : Agent
                 otherAgente.Lalleva = false;
                 otherAgente.ultimaColision = Time.time;
                 otherAgente.LaLlevaIndicadorVisual();
+                otherAgente.AddReward(-1.0f);
 
                 lalleva = true;
                 ultimaColision = Time.time;
                 LaLlevaIndicadorVisual();
-
                 AddReward(1.0f);
+
+                EndEpisode();
+                otherAgente.EndEpisode();
             }
+        }
+        else if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+        {
+            AddReward(-0.003f);
         }
     }
 
