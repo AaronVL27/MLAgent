@@ -7,8 +7,10 @@ using UnityEngine.InputSystem;
 public class AgenteLaLleva : Agent
 {
     [SerializeField] GameObject oponente;
-    //[SerializeField] GameObject hojaLaLleva;
+    [SerializeField] GameObject hojaLaLleva;
     [SerializeField] float velocidad;
+    [SerializeField] float enfriamiento;
+    float ultimaColision;
     Rigidbody rb;
     [SerializeField] bool lalleva;
     public bool Lalleva { get => lalleva; set => lalleva = value; }
@@ -48,13 +50,26 @@ public class AgenteLaLleva : Agent
 
         float distanciaObjetivo = Vector3.Distance(transform.localPosition, oponente.transform.localPosition);
 
-        if (Lalleva)
+        if (Lalleva && distanciaObjetivo > 1.5f)
         {
-            AddReward(0.0002f);
+            AddReward(0.002f);
         }
-        else
+        else if (Lalleva && distanciaObjetivo <= 1.5f) 
         {
-            AddReward(-0.0001f);
+            AddReward(-0.001f);
+        }
+        if (!Lalleva && distanciaObjetivo < 1.5f)
+        {
+            AddReward(0.002f);
+        }
+        else if (!Lalleva && distanciaObjetivo > 1.5f)
+        {
+            AddReward(-0.001f);
+        }
+        if (transform.position.y < 0)
+        {
+            AddReward(-1.0f);
+            EndEpisode();
         }
     }
 
@@ -84,9 +99,25 @@ public class AgenteLaLleva : Agent
     {
         if (collision.gameObject.CompareTag("Agente") && !lalleva)
         {
-            collision.gameObject.GetComponent<AgenteLaLleva>().Lalleva = false;
-            lalleva = true;
-            AddReward(1.0f);
+            AgenteLaLleva otherAgente = collision.gameObject.GetComponent<AgenteLaLleva>();
+
+            if (Time.time >= ultimaColision + enfriamiento)
+            {
+                otherAgente.Lalleva = false;
+                otherAgente.ultimaColision = Time.time;
+                otherAgente.LaLlevaIndicadorVisual();
+
+                lalleva = true;
+                ultimaColision = Time.time;
+                LaLlevaIndicadorVisual();
+
+                AddReward(1.0f);
+            }
         }
+    }
+
+    public void LaLlevaIndicadorVisual()
+    {
+        hojaLaLleva.SetActive(lalleva);
     }
 }
