@@ -16,8 +16,6 @@ public class AgenteLaLleva : Agent
     [SerializeField] bool lalleva;
     public bool Lalleva { get => lalleva; set => lalleva = value; }
 
-    float distanciaAnterior;
-
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody>();
@@ -29,9 +27,6 @@ public class AgenteLaLleva : Agent
         rb.angularVelocity = Vector3.zero;
 
         transform.localPosition = new Vector3(Random.Range(-4, 4), 0.5f, Random.Range(-4, 4));
-        oponente.transform.localPosition = new Vector3(Random.Range(-4, 4), 0.5f, Random.Range(-4, 4));
-
-        distanciaAnterior = Vector3.Distance(transform.localPosition, oponente.transform.localPosition);
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -54,20 +49,20 @@ public class AgenteLaLleva : Agent
         rb.AddForce(fuerza * velocidad);
 
         float distanciaObjetivo = Vector3.Distance(transform.localPosition, oponente.transform.localPosition);
-        float deltaDistancia = distanciaObjetivo - distanciaAnterior;
 
-        if (lalleva)
+        if (lalleva && distanciaObjetivo > 1.5f)
         {
-            // se alejó → recompensa; se acercó → castigo
-            AddReward(deltaDistancia * 0.05f);
+            AddReward(0.05f);
         }
-        else
+        else if (lalleva && distanciaObjetivo <= 1.0f)
         {
-            // se acercó → recompensa; se alejó → castigo
-            AddReward(-deltaDistancia * 0.05f);
+            AddReward(-0.05f);
+        }
+        if (!lalleva && distanciaObjetivo > 1.5f)
+        {
+            AddReward(-0.05f);
         }
 
-        distanciaAnterior = distanciaObjetivo;
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -109,14 +104,13 @@ public class AgenteLaLleva : Agent
                 ultimaColision = Time.time;
                 LaLlevaIndicadorVisual();
                 AddReward(1.0f);
-
                 EndEpisode();
-                otherAgente.EndEpisode();
             }
         }
-        else if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
-            AddReward(-0.003f);
+            AddReward(-1.0f);
+            EndEpisode();
         }
     }
 
