@@ -4,7 +4,6 @@ using Unity.MLAgents.Sensors;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
 public class AgenteLaLleva : Agent
 {
     [SerializeField] GameObject oponente;
@@ -50,18 +49,41 @@ public class AgenteLaLleva : Agent
 
         float distanciaObjetivo = Vector3.Distance(transform.localPosition, oponente.transform.localPosition);
 
-        if (lalleva && distanciaObjetivo > 1.5f)
+        if (lalleva)
         {
-            AddReward(0.05f);
+            if (distanciaObjetivo > 2.0f)
+            {
+                AddReward(0.001f);
+            }
+            else
+            {
+                AddReward(-0.001f);
+            }
         }
-        else if (lalleva && distanciaObjetivo <= 1.0f)
+        else
         {
-            AddReward(-0.05f);
+            if (distanciaObjetivo < 2.0f)
+            {
+                AddReward(0.001f);
+            }
+            else
+            {
+                AddReward(-0.001f);
+            }
         }
-        if (!lalleva && distanciaObjetivo > 1.5f)
-        {
-            AddReward(-0.05f);
-        }
+
+        //if (lalleva && distanciaObjetivo > 1.5f)
+        //{
+        //    AddReward(0.05f);
+        //}
+        //else if (lalleva && distanciaObjetivo <= 1.0f)
+        //{
+        //    AddReward(-0.05f);
+        //}
+        //if (!lalleva && distanciaObjetivo > 1.5f)
+        //{
+        //    AddReward(-0.05f);
+        //}
 
     }
 
@@ -95,23 +117,51 @@ public class AgenteLaLleva : Agent
 
             if (Time.time >= ultimaColision + enfriamiento)
             {
-                otherAgente.Lalleva = false;
-                otherAgente.ultimaColision = Time.time;
-                otherAgente.LaLlevaIndicadorVisual();
-                otherAgente.AddReward(-1.0f);
-
+                AddReward(2.0f);
                 lalleva = true;
+
+                otherAgente.AddReward(-1.0f);
+                otherAgente.Lalleva = false;
+
                 ultimaColision = Time.time;
+                otherAgente.ultimaColision = Time.time;
+
                 LaLlevaIndicadorVisual();
-                AddReward(1.0f);
+                otherAgente.LaLlevaIndicadorVisual();
+
                 EndEpisode();
+                otherAgente.EndEpisode();
             }
         }
         if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
-            AddReward(-1.0f);
+            AddReward(-0.5f);
             EndEpisode();
         }
+
+        //if (collision.gameObject.CompareTag("Agente") && !lalleva)
+        //{
+        //    AgenteLaLleva otherAgente = collision.gameObject.GetComponent<AgenteLaLleva>();
+
+        //    if (Time.time >= ultimaColision + enfriamiento)
+        //    {
+        //        otherAgente.Lalleva = false;
+        //        otherAgente.ultimaColision = Time.time;
+        //        otherAgente.LaLlevaIndicadorVisual();
+        //        otherAgente.AddReward(-1.0f);
+
+        //        lalleva = true;
+        //        ultimaColision = Time.time;
+        //        LaLlevaIndicadorVisual();
+        //        AddReward(1.0f);
+        //        EndEpisode();
+        //    }
+        //}
+        //if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+        //{
+        //    AddReward(-1.0f);
+        //    EndEpisode();
+        //}
     }
 
     public void LaLlevaIndicadorVisual()
