@@ -6,166 +6,115 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 public class AgenteLaLleva : Agent
 {
-    [SerializeField] GameObject oponente;
-    [SerializeField] GameObject hojaLaLleva;
-    [SerializeField] float velocidad;
-    [SerializeField] float enfriamiento;
-    float ultimaColision;
-    Rigidbody rb;
-    [SerializeField] bool lalleva;
-    public bool Lalleva { get => lalleva; set => lalleva = value; }
+    [Header("Referencias de Componentes")]
+    public Transform objetivoTransform;
+    public MeshRenderer miRenderer;
+    public MeshRenderer rendererJugador;
+    public Material materialPerseguidor;
+    public Material materialEvasor;
+
+    [Header("Configuración de Roles")]
+    public bool esPerseguidor = true;
+    public float velocidad = 5f;
+    private Rigidbody rb;
+    private Vector3 posicionInicialAgente;
 
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody>();
+        posicionInicialAgente = transform.localPosition;
+        ActualizarAspectoRol();
     }
 
     public override void OnEpisodeBegin()
     {
+        // Reiniciar posiciones relativas a la Arena
+        transform.localPosition = posicionInicialAgente;
         rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
 
-        transform.localPosition = new Vector3(Random.Range(-4, 4), 0.5f, Random.Range(-4, 4));
+        if (objetivoTransform != null)
+        {
+            objetivoTransform.localPosition = new Vector3(Random.Range(-4f, 4f), 1f, Random.Range(-4f, 4f));
+        }
+
+        // Aleatorizar el rol al inicio de cada intento (50% de probabilidad)
+        esPerseguidor = Random.value > 0.5f;
+        ActualizarAspectoRol();
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
+        // 1. Posición Local del Agente - 3 valores (X, Y, Z)
         sensor.AddObservation(transform.localPosition);
-        sensor.AddObservation(oponente.transform.localPosition);
 
-        sensor.AddObservation(oponente.GetComponent<Rigidbody>().linearVelocity);
-        sensor.AddObservation(rb.linearVelocity);
+        // 2. Posición Local del Objetivo - 3 valores (X, Y, Z)
+        sensor.AddObservation(objetivoTransform.localPosition);
 
-        sensor.AddObservation(lalleva ? 1.0f : 0.0f);
+        // 3. Rol Actual (Booleano) - 1 valor
+        sensor.AddObservation(esPerseguidor);
+
+        // Total de observaciones (Space Size) = 3 + 3 + 1 = 7
     }
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        float movimientoX = actions.ContinuousActions[0];
-        float movimientoY = actions.ContinuousActions[1];
+        // Acciones continuas dadas por la red neuronal
+        float moverX = actions.ContinuousActions[0];
+        float moverZ = actions.ContinuousActions[1];
 
-        Vector3 fuerza = new Vector3(movimientoX, 0, movimientoY);
-        rb.AddForce(fuerza * velocidad);
+        Vector3 movimiento = new Vector3(moverX, 0, moverZ);
+        rb.AddForce(movimiento * velocidad);
 
-        float distanciaObjetivo = Vector3.Distance(transform.localPosition, oponente.transform.localPosition);
-
-        if (lalleva)
+        // Lógica de recompensas según el rol
+        if (esPerseguidor)
         {
-            if (distanciaObjetivo > 2.0f)
-            {
-                AddReward(0.001f);
-            }
-            else
-            {
-                AddReward(-0.001f);
-            }
+            // Castigo de tiempo para obligarlo a atrapar rápido
+            AddReward(-1f / MaxStep);
         }
         else
         {
-            if (distanciaObjetivo < 2.0f)
-            {
-                AddReward(0.001f);
-            }
-            else
-            {
-                AddReward(-0.001f);
-            }
+            // Pequeña recompensa por sobrevivir cada paso mientras huye
+            AddReward(1f / MaxStep);
         }
-
-        //if (lalleva && distanciaObjetivo > 1.5f)
-        //{
-        //    AddReward(0.05f);
-        //}
-        //else if (lalleva && distanciaObjetivo <= 1.0f)
-        //{
-        //    AddReward(-0.05f);
-        //}
-        //if (!lalleva && distanciaObjetivo > 1.5f)
-        //{
-        //    AddReward(-0.05f);
-        //}
-
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        var accionesConinuas = actionsOut.ContinuousActions;
-
-        if (Keyboard.current.aKey.isPressed)
-        {
-            accionesConinuas[0] = -1.0f;
-        }
-        else if (Keyboard.current.dKey.isPressed)
-        {
-            accionesConinuas[0] = 1.0f;
-        }
-        if (Keyboard.current.wKey.isPressed)
-        {
-            accionesConinuas[1] = 1.0f;
-        }
-        else if (Keyboard.current.sKey.isPressed)
-        {
-            accionesConinuas[1] = -1.0f;
-        }
+        // Control manual para probar físicas con el teclado
+        var accionesContinuas = actionsOut.ContinuousActions;
+        accionesContinuas[0] = Input.GetAxis("Horizontal");
+        accionesContinuas[1] = Input.GetAxis("Vertical");
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Agente") && !lalleva)
+        if (collision.gameObject.CompareTag("Agente"))
         {
-            AgenteLaLleva otherAgente = collision.gameObject.GetComponent<AgenteLaLleva>();
-
-            if (Time.time >= ultimaColision + enfriamiento)
+            if (esPerseguidor)
             {
-                AddReward(2.0f);
-                lalleva = true;
-
-                otherAgente.AddReward(-1.0f);
-                otherAgente.Lalleva = false;
-
-                ultimaColision = Time.time;
-                otherAgente.ultimaColision = Time.time;
-
-                LaLlevaIndicadorVisual();
-                otherAgente.LaLlevaIndicadorVisual();
-
-                EndEpisode();
-                otherAgente.EndEpisode();
+                SetReward(1.0f); // ¡Atrapó al jugador! Premio mayor.
             }
+            else
+            {
+                SetReward(-1.0f); // ¡Fue atrapado! Castigo mayor.
+            }
+            EndEpisode(); // Finaliza la ronda para reiniciar posiciones
         }
-        if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
+        else if (collision.gameObject.CompareTag("Wall"))
         {
-            AddReward(-0.5f);
-            EndEpisode();
+            // Castigo por chocar torpemente contra la pared
+            AddReward(-0.1f);
         }
-
-        //if (collision.gameObject.CompareTag("Agente") && !lalleva)
-        //{
-        //    AgenteLaLleva otherAgente = collision.gameObject.GetComponent<AgenteLaLleva>();
-
-        //    if (Time.time >= ultimaColision + enfriamiento)
-        //    {
-        //        otherAgente.Lalleva = false;
-        //        otherAgente.ultimaColision = Time.time;
-        //        otherAgente.LaLlevaIndicadorVisual();
-        //        otherAgente.AddReward(-1.0f);
-
-        //        lalleva = true;
-        //        ultimaColision = Time.time;
-        //        LaLlevaIndicadorVisual();
-        //        AddReward(1.0f);
-        //        EndEpisode();
-        //    }
-        //}
-        //if (collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
-        //{
-        //    AddReward(-1.0f);
-        //    EndEpisode();
-        //}
     }
 
-    public void LaLlevaIndicadorVisual()
+    private void ActualizarAspectoRol()
     {
-        hojaLaLleva.SetActive(lalleva);
+        if (miRenderer != null && rendererJugador != null)
+        {
+            miRenderer.material = esPerseguidor ? materialPerseguidor : materialEvasor;
+            rendererJugador.material = esPerseguidor ? materialEvasor : materialPerseguidor;
+        }
     }
+
+
 }
