@@ -1507,7 +1507,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &612249432
 Transform:
   m_ObjectHideFlags: 0
@@ -5749,10 +5749,6 @@ PrefabInstance:
     - target: {fileID: 4234164269780848316, guid: b123cb1bc53533c4d97440bc5fcf237a, type: 3}
       propertyPath: m_Name
       value: EntornoDeEntrenamientoLaLleva
-      objectReference: {fileID: 0}
-    - target: {fileID: 4234164269780848316, guid: b123cb1bc53533c4d97440bc5fcf237a, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6183394246646012705, guid: b123cb1bc53533c4d97440bc5fcf237a, type: 3}
       propertyPath: m_LocalPosition.x

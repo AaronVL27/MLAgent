@@ -82,8 +82,7 @@ public class AgenteLaLleva : Agent
     {
         // Control manual para probar físicas con el teclado
         var accionesContinuas = actionsOut.ContinuousActions;
-        accionesContinuas[0] = Input.GetAxis("Horizontal");
-        accionesContinuas[1] = Input.GetAxis("Vertical");
+        ; ; ; ;
     }
 
     private void OnCollisionEnter(Collision collision)
